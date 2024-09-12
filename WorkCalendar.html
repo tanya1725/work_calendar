@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Work Calendar</title>
+
+
+  <script>
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const columns = ['All', '1st', '2nd', '3rd', '4th', '5th'];
+
+let halfDayOption = false;
+const formData = days.map(() => {
+  return columns.reduce((acc, col) => {
+    acc[col] = { checked: false, selected: 'full' };
+    return acc;
+  }, {});
+});
+
+// Generate the table dynamically
+function generateTable() {
+  const tbody = document.getElementById('calendarBody');
+  tbody.innerHTML = '';
+
+  days.forEach((day, index) => {
+    const row = document.createElement('tr');
+    const dayCell = document.createElement('td');
+    dayCell.textContent = day;
+    row.appendChild(dayCell);
+
+    columns.forEach(col => {
+      const cell = document.createElement('td');
+      const div = document.createElement('div');
+      div.classList.add('d-flex', 'align-items-center');
+
+      if (col === 'All') {
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = allChecked(index);
+        checkbox.onchange = (e) => toggleAll(index, e.target.checked);
+        div.appendChild(checkbox);
+      } else {
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = formData[index][col].checked;
+        checkbox.onchange = () => checkIfAllUnchecked(index);
+        div.appendChild(checkbox);
+
+        if (halfDayOption) {
+          const select = document.createElement('select');
+          select.classList.add('form-control', 'ml-2');
+          select.innerHTML = `
+            <option value="full">Full Day</option>
+            <option value="first-half">1st Half</option>
+            <option value="second-half">2nd Half</option>`;
+          select.value = formData[index][col].selected;
+          select.onchange = (e) => {
+            formData[index][col].selected = e.target.value;
+          };
+          div.appendChild(select);
+        }
+      }
+
+      cell.appendChild(div);
+      row.appendChild(cell);
+    });
+
+    tbody.appendChild(row);
+  });
+}
+
+// Check if all columns (except 'All') are checked
+function allChecked(rowIndex) {
+  return columns.slice(1).every(col => formData[rowIndex][col].checked);
+}
+
+// Toggle all checkboxes in a row when 'All' is checked/unchecked
+function toggleAll(rowIndex, isChecked) {
+  columns.slice(1).forEach(col => {
+    formData[rowIndex][col].checked = isChecked;
+  });
+  generateTable(); // Re-render the table
+}
+
+// Uncheck 'All' if any individual checkbox is unchecked
+function checkIfAllUnchecked(rowIndex) {
+  const allCheckedStatus = allChecked(rowIndex);
+  if (!allCheckedStatus) {
+    formData[rowIndex]['All'].checked = false;
+  }
+  generateTable(); // Re-render the table
+}
+
+// Toggle half-day option
+function toggleHalfDayOption() {
+  halfDayOption = document.getElementById('halfDayOption').checked;
+  generateTable(); // Re-render the table
+}
+
+// Handle form submission
+document.getElementById('workCalendarForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+  console.log('Form Data:', formData);
+  console.log('Half Day Option:', halfDayOption);
+});
+
+generateTable();
+
+  </script>
+<style>
+    .table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th, .table td {
+  padding: 15px;
+  text-align: center;
+  border: 1px solid #dee2e6;
+  vertical-align: middle;
+}
+
+.table thead th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+}
+
+.d-flex {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ml-2 {
+  margin-left: 10px;
+}
+
+.form-check input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+select.form-control {
+  width: 150px;
+  max-width: 150px;
+  height: 36px;
+  padding: 5px;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  border-color: #007bff;
+  padding: 10px 20px;
+  font-size: 16px;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+  border-color: #004085;
+}
+
+.table-bordered td, .table-bordered th {
+  border: 2px solid #ddd;
+}
+
+input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+}
+
+</style>
+</head>
+<body>
+
+  <div>
+    <h2>Add Work Calendar</h2>
+    <form id="workCalendarForm">
+      <div class="form-check">
+        <input type="checkbox" id="halfDayOption" onchange="toggleHalfDayOption()">
+        <label for="halfDayOption">Half working day & half weekend</label>
+      </div>
+
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>All</th>
+            <th>1st</th>
+            <th>2nd</th>
+            <th>3rd</th>
+            <th>4th</th>
+            <th>5th</th>
+          </tr>
+        </thead>
+        <tbody id="calendarBody"></tbody>
+      </table>
+
+      <button type="submit" class="btn btn-primary">Save</button>
+    </form>
+  </div>
+
+  
+</body>
+
+</html>
